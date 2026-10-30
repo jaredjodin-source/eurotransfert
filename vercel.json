@@ -1,0 +1,12 @@
+
+{
+  "version": 2,
+  "functions": {
+    "api/health.js": {
+      "maxDuration": 10
+    },
+    "api/transfer.js": {
+      "maxDuration": 10
+    }
+  }
+}
