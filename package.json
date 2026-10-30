@@ -1,11 +1,13 @@
 
 {
   "name": "eurotransfer",
-  "version": "1.0.0",
+  "version": "3.0.0",
   "private": true,
-  "description": "Base de transfert bancaire",
-  "main": "server.js",
+  "description": "EuroTransfer avec Mangopay et Vercel",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
-    "start": "node server.js"
+    "dev": "vercel dev"
   }
 }
