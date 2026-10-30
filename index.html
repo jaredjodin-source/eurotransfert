@@ -3,136 +3,243 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport"
+ content="width=device-width,initial-scale=1">
 <title>EuroTransfer</title>
 <style>
 *{box-sizing:border-box}
 body{
- margin:0;background:#090e1c;color:#fff;
- font-family:Arial,sans-serif;padding:20px
+ margin:0;background:#090e1b;color:#fff;
+ font-family:system-ui,Arial,sans-serif
 }
-.container{max-width:470px;margin:35px auto}
-.logo{font-size:27px;font-weight:bold;margin-bottom:25px}
-.logo span{color:#668aff}
+header{
+ padding:24px;border-bottom:1px solid #293650;
+ font-size:25px;font-weight:800
+}
+header span{color:#668aff}
+main{
+ max-width:520px;margin:35px auto;padding:16px
+}
 .card{
  background:#151e31;border:1px solid #30405b;
- border-radius:20px;padding:25px
+ padding:26px;border-radius:22px
 }
-h1{font-size:25px;margin-top:0}
-p{color:#a5b2c8;font-size:14px;line-height:1.6}
+h1{font-size:27px;margin:0 0 12px}
+p{font-size:14px;color:#a5b2c8;line-height:1.7}
 label{
- display:block;margin:20px 0 8px;
- font-size:14px;font-weight:bold
+ display:block;margin:22px 0 8px;
+ font-size:14px;font-weight:600
 }
 input{
- width:100%;padding:15px;background:#0c1526;
- border:1px solid #36455f;border-radius:10px;
- color:white;font-size:16px
+ width:100%;padding:16px;
+ background:#0c1526;border:1px solid #35435e;
+ border-radius:12px;color:white;font-size:16px
 }
 input:focus{outline:1px solid #668aff}
-.payment-box{
- background:#0c1526;border:1px dashed #668aff;
- padding:20px;border-radius:12px;
- margin-top:20px;text-align:center
-}
 button{
- width:100%;background:#527bff;color:white;
- border:0;padding:17px;border-radius:12px;
- font-weight:bold;font-size:16px;margin-top:25px;
+ width:100%;margin-top:25px;padding:17px;
+ background:#527bff;border:0;border-radius:12px;
+ color:white;font-size:16px;font-weight:bold;
  cursor:pointer
 }
-button:disabled{opacity:.55;cursor:not-allowed}
+button:disabled{opacity:.5;cursor:not-allowed}
+.secondary{background:#293650}
+.hidden{display:none}
+.status{
+ padding:13px;border-radius:10px;
+ background:#26334b;font-size:13px;
+ margin-bottom:22px;line-height:1.6
+}
+.summary{
+ padding:18px;background:#0c1526;
+ border-radius:12px;overflow-wrap:anywhere;
+ line-height:2
+}
+.message{
+ margin-top:18px;font-size:14px;
+ color:#ffb5a4;line-height:1.6
+}
 .notice{
- color:#facc74;font-size:13px;
- margin-top:18px;line-height:1.6
+ color:#a5b2c8;font-size:12px;
+ margin-top:24px;text-align:center
 }
 </style>
 </head>
 <body>
-<div class="container">
-<div class="logo">💳 Euro<span>Transfer</span></div>
-
+<header>💳 Euro<span>Transfer</span></header>
+<main>
 <div class="card">
+<div id="connection" class="status">
+ Vérification du serveur...
+</div>
+
+<section id="step1">
 <h1>Envoyer de l'argent</h1>
-<p>
- Remplissez les informations du transfert.
-</p>
+<p>Préparez votre transfert bancaire européen.</p>
 
-<form id="transferForm">
-
-<label for="holder">Nom et prénom du titulaire</label>
+<form id="form">
+<label for="holder">Titulaire de la carte</label>
 <input id="holder" maxlength="100"
  placeholder="Jean Dupont" required>
 
-<label>Informations de carte bancaire</label>
-<div class="payment-box" id="secureCard">
- 🔒 Numéro de carte, expiration et CVC
- <p>
-  Ces champs seront affichés ici par le
-  prestataire de paiement sécurisé.
- </p>
- <p>
-  Aucune donnée bancaire sensible
-  n'est collectée par EuroTransfer.
- </p>
-</div>
+<label for="beneficiary">Bénéficiaire</label>
+<input id="beneficiary" maxlength="100"
+ placeholder="Marie Dupont" required>
 
-<label for="beneficiary">Nom du bénéficiaire</label>
-<input id="beneficiary"
- placeholder="Marie Dupont"
- maxlength="100" required>
-
-<label for="iban">IBAN du bénéficiaire</label>
-<input id="iban"
- placeholder="BE68 5390 0754 7034"
- maxlength="42" required>
+<label for="iban">IBAN</label>
+<input id="iban" maxlength="42"
+ placeholder="BE68 5390 0754 7034" required>
 
 <label for="amount">Montant (€)</label>
 <input id="amount" type="number"
  min="1" max="10000" step="0.01"
  placeholder="50.00" required>
 
-<button id="submitBtn" type="submit" disabled>
- Payer et envoyer
-</button>
-
-<div class="notice" id="status" role="status">
- Paiement indisponible : prestataire bancaire
- non connecté.
-</div>
-
+<button type="submit">Continuer</button>
 </form>
+<div id="error" class="message"></div>
+</section>
+
+<section id="step2" class="hidden">
+<h1>Confirmation</h1>
+<div id="summary" class="summary"></div>
+
+<p>
+ Les informations de carte bancaire seront
+ saisies sur la page hébergée du prestataire,
+ lorsque les transferts seront activés.
+</p>
+
+<button id="pay" type="button">
+ Vérifier le transfert
+</button>
+<button id="back" class="secondary" type="button">
+ Modifier
+</button>
+<div id="result" class="message" role="status"></div>
+</section>
+
+<div class="notice">
+ Aucun débit n'est effectué tant que
+ le service de transfert n'est pas activé.
 </div>
 </div>
+</main>
 
 <script>
-const form=document.getElementById("transferForm");
-const ibanInput=document.getElementById("iban");
-const status=document.getElementById("status");
+"use strict";
 
-ibanInput.addEventListener("input",()=>{
- const clean=ibanInput.value
-   .replace(/[^a-z0-9]/gi,"")
-   .toUpperCase()
-   .slice(0,34);
+// Si le site est sur Vercel : laisser vide.
+// Si GitHub Pages : mettre l'URL de Vercel.
+const API_BASE = "";
 
- ibanInput.value=
-   clean.match(/.{1,4}/g)?.join(" ")||"";
+const $ = id => document.getElementById(id);
+let transfer = null;
+
+async function api(path, options={}) {
+ const response = await fetch(API_BASE+path,options);
+ const type=response.headers.get("content-type")||"";
+
+ if(!type.includes("application/json")) {
+   throw new Error("Le serveur API est indisponible.");
+ }
+
+ const data=await response.json();
+
+ if(!response.ok) {
+   throw new Error(data.error||"Erreur API");
+ }
+
+ return data;
+}
+
+async function checkConnection() {
+ try {
+   const data=await api("/api/health");
+   $("connection").textContent=
+     data.connected
+       ? "✓ Connexion Mangopay établie — transferts non activés"
+       : "Connexion Mangopay indisponible";
+ } catch(e) {
+   $("connection").textContent=e.message;
+ }
+}
+
+$("iban").addEventListener("input",e=>{
+ const clean=e.target.value
+  .replace(/[^a-z0-9]/gi,"")
+  .toUpperCase().slice(0,34);
+ e.target.value=clean.match(/.{1,4}/g)?.join(" ")||"";
 });
 
-form.addEventListener("submit",event=>{
- event.preventDefault();
+$("form").addEventListener("submit",e=>{
+ e.preventDefault();
+ $("error").textContent="";
 
- status.textContent=
-   "Le transfert ne peut pas être effectué : " +
-   "aucun prestataire agréé n'est connecté.";
+ const holder=$("holder").value.trim();
+ const beneficiary=$("beneficiary").value.trim();
+ const iban=$("iban").value.replace(/\s/g,"").toUpperCase();
+ const amount=Number($("amount").value);
+ const cents=Math.round(amount*100);
+
+ if(holder.length<2 || beneficiary.length<2) {
+   $("error").textContent="Nom invalide.";
+   return;
+ }
+
+ if(!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban)) {
+   $("error").textContent="Format IBAN invalide.";
+   return;
+ }
+
+ if(!Number.isFinite(amount) ||
+    amount<1 || amount>10000 ||
+    Math.abs(amount*100-cents)>0.000001) {
+   $("error").textContent="Montant invalide.";
+   return;
+ }
+
+ transfer={
+   holder,beneficiary,iban,
+   amountCents:cents,currency:"EUR"
+ };
+
+ $("summary").textContent=
+   "Titulaire : "+holder+"\n"+
+   "Bénéficiaire : "+beneficiary+"\n"+
+   "IBAN : "+iban+"\n"+
+   "Montant : "+(cents/100).toFixed(2)+" €";
+
+ $("summary").style.whiteSpace="pre-line";
+ $("step1").classList.add("hidden");
+ $("step2").classList.remove("hidden");
 });
 
-// Le bouton ne sera activé qu'après
-// intégration d'un prestataire agréé.
-// Les champs de carte seront fournis par
-// son composant sécurisé, pas par des
-// inputs HTML ordinaires.
+$("back").onclick=()=>{
+ $("step2").classList.add("hidden");
+ $("step1").classList.remove("hidden");
+};
+
+$("pay").onclick=async()=>{
+ if(!transfer)return;
+ $("pay").disabled=true;
+ $("result").textContent="Vérification...";
+
+ try {
+   const data=await api("/api/transfer",{
+     method:"POST",
+     headers:{"Content-Type":"application/json"},
+     body:JSON.stringify(transfer)
+   });
+   $("result").textContent=data.message;
+ } catch(e) {
+   $("result").textContent=e.message;
+ } finally {
+   $("pay").disabled=false;
+ }
+};
+
+checkConnection();
 </script>
 </body>
 </html>
