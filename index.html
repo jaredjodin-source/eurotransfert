@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EuroTransfer | Transfert bancaire</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;font-family:Arial,sans-serif;
+ background:#090e1b;color:#f8fafc;
+ min-height:100vh;display:grid;place-items:center;
+ padding:20px
+}
+.app{width:100%;max-width:470px}
+.logo{font-size:26px;font-weight:800;margin-bottom:25px}
+.logo span{color:#6b8cff}
+.card{
+ background:#151d30;border:1px solid #29334b;
+ border-radius:22px;padding:26px;
+ box-shadow:0 15px 50px #0005
+}
+h1{font-size:25px;margin:0 0 10px}
+.subtitle{color:#94a3b8;font-size:14px;line-height:1.6}
+label{display:block;margin:20px 0 8px;font-size:14px}
+input{
+ width:100%;background:#0c1425;color:white;
+ border:1px solid #34415a;border-radius:11px;
+ padding:15px;font-size:16px;outline:none
+}
+input:focus{border-color:#7194ff}
+.amount{position:relative}
+.amount span{
+ position:absolute;right:15px;top:14px;
+ color:#aab9d3;font-size:18px
+}
+button{
+ width:100%;background:#557cff;color:white;
+ border:0;border-radius:12px;padding:16px;
+ font-weight:bold;font-size:16px;cursor:pointer;
+ margin-top:25px
+}
+button:hover{background:#4269e8}
+button:disabled{opacity:.6;cursor:wait}
+.note{font-size:12px;color:#94a3b8;
+ text-align:center;line-height:1.7;margin-top:18px}
+#message{margin-top:15px;font-size:14px;line-height:1.5}
+.error{color:#ff9292}
+.success{color:#77e7b3}
+.footer{text-align:center;color:#64748b;
+ font-size:12px;margin-top:25px}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="logo">💳 Euro<span>Transfer</span></div>
+ <div class="card">
+  <h1>Envoyer de l'argent</h1>
+  <p class="subtitle">
+   Renseignez le compte bénéficiaire et le montant.
+   Le paiement par carte sera effectué auprès
+   d'un prestataire sécurisé.
+  </p>
+
+  <form id="transferForm">
+   <label for="name">Nom du bénéficiaire</label>
+   <input id="name" maxlength="100"
+     placeholder="Jean Dupont" required>
+
+   <label for="iban">IBAN du bénéficiaire</label>
+   <input id="iban" maxlength="42"
+     placeholder="BE68 5390 0754 7034"
+     autocomplete="off" required>
+
+   <label for="amount">Montant à envoyer</label>
+   <div class="amount">
+    <input id="amount" type="number"
+      min="1" max="10000" step="0.01"
+      placeholder="50.00" required>
+    <span>€</span>
+   </div>
+
+   <button id="submitBtn" type="submit">
+    Continuer vers le paiement
+   </button>
+  </form>
+
+  <div id="message" role="status"></div>
+
+  <p class="note">
+   🔒 Les données de carte seront saisies
+   directement auprès du prestataire bancaire.
+   Aucun CVC n'est enregistré ici.
+  </p>
+ </div>
+ <div class="footer">EuroTransfer • Paiement sécurisé</div>
+</div>
+
+<script>
+const form = document.getElementById("transferForm");
+const message = document.getElementById("message");
+const button = document.getElementById("submitBtn");
+
+function validIBAN(value) {
+ const iban = value.replace(/\s/g, "").toUpperCase();
+
+ if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban))
+   return false;
+
+ const rearranged = iban.slice(4) + iban.slice(0,4);
+ let remainder = 0;
+
+ for (const char of rearranged) {
+   const digits = /[A-Z]/.test(char)
+     ? String(char.charCodeAt(0) - 55)
+     : char;
+
+   for (const digit of digits)
+     remainder = (remainder * 10 + Number(digit)) % 97;
+ }
+ return remainder === 1;
+}
+
+form.addEventListener("submit", async (event) => {
+ event.preventDefault();
+
+ const name = document.getElementById("name").value.trim();
+ const iban = document.getElementById("iban").value
+   .replace(/\s/g, "").toUpperCase();
+ const amount = Number(document.getElementById("amount").value);
+
+ message.textContent = "";
+ message.className = "";
+
+ if (!validIBAN(iban)) {
+   message.textContent = "IBAN invalide.";
+   message.className = "error";
+   return;
+ }
+
+ if (!Number.isFinite(amount) || amount < 1 || amount > 10000) {
+   message.textContent = "Montant invalide.";
+   message.className = "error";
+   return;
+ }
+
+ button.disabled = true;
+ button.textContent = "Préparation...";
+
+ try {
+   const response = await fetch("/api/transfers", {
+     method: "POST",
+     headers: {"Content-Type":"application/json"},
+     body: JSON.stringify({
+       beneficiaryName: name,
+       iban,
+       amount: amount.toFixed(2),
+       currency: "EUR"
+     })
+   });
+
+   const result = await response.json();
+
+   if (!response.ok)
+     throw new Error(result.error || "Erreur du serveur");
+
+   if (result.checkoutUrl) {
+     const url = new URL(result.checkoutUrl, location.origin);
+     if (url.protocol !== "https:")
+       throw new Error("URL de paiement non sécurisée");
+     location.assign(url.href);
+   } else {
+     message.textContent = result.message || "Paiement indisponible.";
+     message.className = "error";
+   }
+ } catch(error) {
+   message.textContent = error.message;
+   message.className = "error";
+ } finally {
+   button.disabled = false;
+   button.textContent = "Continuer vers le paiement";
+ }
+});
+</script>
+</body>
+</html>
+  
